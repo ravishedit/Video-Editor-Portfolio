@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ravish | iOS Style Portfolio</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts (San Francisco / Inter style) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- GSAP + Lenis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        glass: 'rgba(255, 255, 255, 0.03)',
+                        glassBorder: 'rgba(255, 255, 255, 0.08)',
+                        glassHighlight: 'rgba(255, 255, 255, 0.15)',
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* --- THE iOS LIQUID GLASS EFFECT --- */
+        .ios-glass {
+            background: rgba(20, 20, 20, 0.4); /* Dark translucent base */
+            backdrop-filter: blur(25px); /* Heavy Blur */
+            -webkit-backdrop-filter: blur(25px); /* Safari support */
+            border: 1px solid rgba(255, 255, 255, 0.08); /* Subtle border */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); /* Deep shadow */
+            background-clip: padding-box;
+        }
+
+        .ios-glass:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(30, 30, 30, 0.5);
+            transform: translateY(-2px);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* Liquid Background Blobs */
+        .liquid-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.4;
+            animation: blob 15s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 0px; } /* Hide scrollbar for cleaner look */
+
+        /* Video Modal Transition */
+        #video-modal {
+            transition: opacity 0.5s ease, backdrop-filter 0.5s ease;
+        }
+        #video-modal.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        #video-modal.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- LIQUID BACKGROUND (Moving Blobs) -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <!-- White/Gray blobs specific for B&W theme -->
+        <div class="liquid-blob bg-gray-600 w-96 h-96 top-0 left-0 -translate-x-1/2 -translate-y-1/2"></div>
+        <div class="liquid-blob bg-gray-800 w-[500px] h-[500px] bottom-0 right-0 translate-x-1/3 translate-y-1/3 animation-delay-2000"></div>
+        <div class="liquid-blob bg-white w-64 h-64 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10"></div>
+    </div>
+
+    <!-- PRELOADER -->
+    <div id="preloader" class="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center">
+        <div class="text-center">
+            <h1 class="text-6xl font-black tracking-tighter mb-4 text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-600" id="loader-text">
+                RAVISH
+            </h1>
+            <div class="w-32 h-1 bg-gray-900 rounded-full overflow-hidden mx-auto">
+                <div id="loader-bar" class="h-full bg-white w-0 rounded-full"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLOATING iOS NAVBAR -->
+    <nav class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-4xl">
+        <div class="ios-glass rounded-full px-6 py-4 flex justify-between items-center">
+            <a href="#" class="text-xl font-bold tracking-tight pl-2">Ravish<span class="text-gray-500">.Edit</span></a>
+            
+            <div class="hidden md:flex gap-1 bg-black/20 p-1 rounded-full border border-white/5">
+                <a href="#about" class="px-5 py-2 rounded-full text-sm font-medium hover:bg-white/10 transition text-gray-300 hover:text-white">Profile</a>
+                <a href="#portfolio" class="px-5 py-2 rounded-full text-sm font-medium hover:bg-white/10 transition text-gray-300 hover:text-white">Work</a>
+                <a href="#services" class="px-5 py-2 rounded-full text-sm font-medium hover:bg-white/10 transition text-gray-300 hover:text-white">Services</a>
+            </div>
+
+            <a href="#contact" class="bg-white text-black px-5 py-2 rounded-full text-sm font-bold hover:scale-105 transition shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                Hire Me
+            </a>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="min-h-screen flex items-center justify-center px-6 pt-24 relative">
+        <div class="max-w-4xl text-center z-10">
+            <!-- iOS Pill Tag -->
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full ios-glass mb-8 animate-float">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span class="text-xs font-semibold tracking-widest uppercase text-gray-300">Available for Projects</span>
+            </div>
+
+            <h1 class="hero-title opacity-0 translate-y-10 text-6xl md:text-8xl font-black tracking-tight leading-[0.95] mb-6">
+                Visuals That <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-b from-white via-gray-200 to-gray-600">Retain Attention.</span>
+            </h1>
+
+            <p class="hero-desc opacity-0 translate-y-10 text-xl text-gray-400 max-w-2xl mx-auto mb-10 font-medium">
+                High-end editing for Tech & AI Creators. <br> 
+                Optimized for Watch Time. Engineered for Growth.
+            </p>
+
+            <div class="hero-btn opacity-0 translate-y-10 flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#portfolio" class="group relative px-8 py-4 bg-white text-black rounded-full font-bold text-lg overflow-hidden transition-all hover:scale-105">
+                    <span class="relative z-10">View Portfolio</span>
+                    <div class="absolute inset-0 bg-gray-200 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                </a>
+                <a href="https://wa.me/919259338002" target="_blank" class="px-8 py-4 ios-glass rounded-full font-bold text-lg hover:bg-white/10 transition flex items-center gap-2 justify-center">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS (Glass Strip) -->
+    <div class="px-4 mb-24">
+        <div class="max-w-6xl mx-auto ios-glass rounded-3xl p-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-center border-t border-white/10">
+            <div class="stat-box opacity-0">
+                <h3 class="text-4xl font-bold mb-1 text-white counter" data-target="100">0</h3>
+                <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold">Niche Focus</p>
+            </div>
+            <div class="stat-box opacity-0">
+                <h3 class="text-4xl font-bold mb-1 text-white"><span class="counter" data-target="8">0</span>s</h3>
+                <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold">Hook Cycle</p>
+            </div>
+            <div class="stat-box opacity-0">
+                <h3 class="text-4xl font-bold mb-1 text-white"><span class="counter" data-target="24">0</span>h</h3>
+                <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold">Turnaround</p>
+            </div>
+            <div class="stat-box opacity-0">
+                <h3 class="text-4xl font-bold mb-1 text-white">Top 1%</h3>
+                <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold">Quality</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SERVICES (iOS Widgets Layout) -->
+    <section id="services" class="py-10 px-4">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="section-title opacity-0 text-3xl md:text-5xl font-bold mb-12 text-center">My Ecosystem</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Large Widget -->
+                <div class="service-card opacity-0 md:col-span-2 ios-glass rounded-[2rem] p-10 flex flex-col justify-between h-80 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition duration-700"></div>
+                    <div>
+                        <span class="px-3 py-1 bg-white/10 rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block">Core Service</span>
+                        <h3 class="text-3xl font-bold mt-2">Tech & AI Storytelling</h3>
+                        <p class="text-gray-400 mt-4 max-w-md">I don't just cut; I visualize complex concepts. Perfect for tutorials, reviews, and AI news.</p>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <span class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><i class="fas fa-microchip"></i></span>
+                        <span class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><i class="fas fa-robot"></i></span>
+                    </div>
+                </div>
+
+                <!-- Small Widget -->
+                <div class="service-card opacity-0 ios-glass rounded-[2rem] p-8 flex flex-col justify-center items-center text-center h-80 group">
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-gray-700 to-black flex items-center justify-center mb-6 shadow-xl group-hover:scale-110 transition">
+                        <i class="fas fa-mobile-alt text-3xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold">Shorts & Reels</h3>
+                    <p class="text-sm text-gray-400 mt-2">High-retention vertical edits designed for the algorithm.</p>
+                </div>
+
+                <!-- Medium Widget -->
+                <div class="service-card opacity-0 ios-glass rounded-[2rem] p-8 h-64 flex flex-col justify-between group">
+                    <i class="fas fa-wave-square text-4xl text-gray-500 group-hover:text-white transition"></i>
+                    <div>
+                        <h3 class="text-xl font-bold">Audio Engineering</h3>
+                        <p class="text-sm text-gray-400">Crisp voiceovers using Adobe Podcast AI.</p>
+                    </div>
+                </div>
+
+                <!-- Medium Widget -->
+                <div class="service-card opacity-0 md:col-span-2 ios-glass rounded-[2rem] p-8 h-64 flex items-center justify-between px-12 group">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-2">My Stack</h3>
+                        <div class="flex flex-wrap gap-3">
+                            <span class="px-4 py-2 bg-black/40 rounded-lg text-sm font-semibold border border-white/10">Alight Motion</span>
+                            <span class="px-4 py-2 bg-black/40 rounded-lg text-sm font-semibold border border-white/10">CapCut</span>
+                            <span class="px-4 py-2 bg-black/40 rounded-lg text-sm font-semibold border border-white/10">Gemini</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-layer-group text-6xl text-white/5 group-hover:text-white/20 transition"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PORTFOLIO (Glass Cards) -->
+    <section id="portfolio" class="py-24 px-4">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="section-title opacity-0 text-3xl md:text-5xl font-bold mb-4 text-center">Selected Works</h2>
+            <p class="section-desc opacity-0 text-gray-400 text-center mb-16">Tap to play instantly.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Video 1 -->
+                <div class="portfolio-item opacity-0 group cursor-pointer" onclick="openVideo('1tjidVKFgzdpyr05nIpMrMLIQiwB6VS7X')">
+                    <div class="ios-glass rounded-3xl overflow-hidden relative aspect-video border-0">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
+                        <div class="absolute inset-0 bg-gray-800 group-hover:scale-105 transition duration-700 ease-out">
+                            <!-- Placeholder Graphic -->
+                            <div class="w-full h-full flex items-center justify-center bg-zinc-900">
+                                <i class="fas fa-play text-4xl opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-6 left-6 z-20">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest mb-2 inline-block">Tech Review</span>
+                            <h3 class="text-xl font-bold text-white">Project Showcase 01</h3>
+                        </div>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 scale-50 group-hover:scale-100 border border-white/20">
+                            <i class="fas fa-play text-white ml-1"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video 2 -->
+                <div class="portfolio-item opacity-0 group cursor-pointer" onclick="openVideo('1IfwdaC4z91jvoEoRdsXS4h9nf_n-3Viu')">
+                    <div class="ios-glass rounded-3xl overflow-hidden relative aspect-video border-0">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
+                        <div class="absolute inset-0 bg-gray-800 group-hover:scale-105 transition duration-700 ease-out">
+                             <div class="w-full h-full flex items-center justify-center bg-zinc-900">
+                                <i class="fas fa-play text-4xl opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-6 left-6 z-20">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest mb-2 inline-block">AI Tutorial</span>
+                            <h3 class="text-xl font-bold text-white">Project Showcase 02</h3>
+                        </div>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 scale-50 group-hover:scale-100 border border-white/20">
+                            <i class="fas fa-play text-white ml-1"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video 3 -->
+                <div class="portfolio-item opacity-0 group cursor-pointer" onclick="openVideo('1QEWKJ9oH11EH0XIoTEWy1zxYhaOZLGoo')">
+                    <div class="ios-glass rounded-3xl overflow-hidden relative aspect-video border-0">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
+                        <div class="absolute inset-0 bg-gray-800 group-hover:scale-105 transition duration-700 ease-out">
+                             <div class="w-full h-full flex items-center justify-center bg-zinc-900">
+                                <i class="fas fa-play text-4xl opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-6 left-6 z-20">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest mb-2 inline-block">Viral Reel</span>
+                            <h3 class="text-xl font-bold text-white">Project Showcase 03</h3>
+                        </div>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 scale-50 group-hover:scale-100 border border-white/20">
+                            <i class="fas fa-play text-white ml-1"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                 <!-- Video 4 -->
+                <div class="portfolio-item opacity-0 group cursor-pointer" onclick="openVideo('1j9uWrIdCZBohBLKgUuv5PfpoEu-aPsp4')">
+                    <div class="ios-glass rounded-3xl overflow-hidden relative aspect-video border-0">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
+                        <div class="absolute inset-0 bg-gray-800 group-hover:scale-105 transition duration-700 ease-out">
+                             <div class="w-full h-full flex items-center justify-center bg-zinc-900">
+                                <i class="fas fa-play text-4xl opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-6 left-6 z-20">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest mb-2 inline-block">Course</span>
+                            <h3 class="text-xl font-bold text-white">Project Showcase 04</h3>
+                        </div>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 scale-50 group-hover:scale-100 border border-white/20">
+                            <i class="fas fa-play text-white ml-1"></i>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Video 5 -->
+                <div class="portfolio-item opacity-0 group cursor-pointer" onclick="openVideo('1KXTY9tTHm4p-d-lz2uQ8vh2kBTdPux7u')">
+                    <div class="ios-glass rounded-3xl overflow-hidden relative aspect-video border-0">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 z-10"></div>
+                        <div class="absolute inset-0 bg-gray-800 group-hover:scale-105 transition duration-700 ease-out">
+                             <div class="w-full h-full flex items-center justify-center bg-zinc-900">
+                                <i class="fas fa-play text-4xl opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-6 left-6 z-20">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest mb-2 inline-block">Branding</span>
+                            <h3 class="text-xl font-bold text-white">Project Showcase 05</h3>
+                        </div>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 scale-50 group-hover:scale-100 border border-white/20">
+                            <i class="fas fa-play text-white ml-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="py-32 px-4">
+        <div class="max-w-4xl mx-auto ios-glass rounded-[3rem] p-12 text-center relative overflow-hidden">
+            <!-- Background Glow -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white opacity-5 blur-[80px] rounded-full"></div>
+            
+            <h2 class="text-4xl md:text-6xl font-black mb-6 relative z-10">Let's Edit.</h2>
+            <p class="text-xl text-gray-400 mb-10 relative z-10">Transform your raw footage into viral content.</p>
+            
+            <div class="flex flex-col md:flex-row gap-4 justify-center relative z-10">
+                <a href="mailto:ravishbusiness22@gmail.com" class="px-10 py-4 bg-white text-black rounded-full font-bold hover:scale-105 transition">
+                    ravishbusiness22@gmail.com
+                </a>
+                <a href="https://wa.me/919259338002" class="px-10 py-4 bg-black/50 border border-white/10 rounded-full font-bold hover:bg-black/70 transition">
+                    +91 92593 38002
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-8 text-center border-t border-white/5">
+        <p class="text-gray-500 text-sm font-medium">© 2025 Ravish. Designed in Black & White.</p>
+    </footer>
+
+    <!-- VIDEO MODAL (Direct Play) -->
+    <div id="video-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 hidden">
+        <div class="relative w-full max-w-5xl ios-glass rounded-3xl overflow-hidden shadow-2xl animate-blob">
+            <button onclick="closeVideo()" class="absolute top-4 right-4 z-20 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition border border-white/10">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="relative pt-[56.25%] w-full bg-black">
+                <iframe id="video-frame" class="absolute top-0 left-0 w-full h-full" src="" frameborder="0" allow="autoplay; fullscreen"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <script>
+        // 1. Lenis Smooth Scroll
+        const lenis = new Lenis({
+            duration: 1.5,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            smooth: true,
+            smoothTouch: false,
+        });
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // 2. GSAP Config
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Preloader
+        window.addEventListener("load", () => {
+            const tl = gsap.timeline();
+            tl.to("#loader-bar", { width: "100%", duration: 1, ease: "power2.inOut" })
+              .to("#preloader", { opacity: 0, duration: 0.5, onComplete: () => {
+                  document.getElementById("preloader").style.display = "none";
+              }})
+              .to(".hero-title", { y: 0, opacity: 1, duration: 1, ease: "power3.out" }, "-=0.3")
+              .to(".hero-desc", { y: 0, opacity: 1, duration: 1, ease: "power3.out" }, "-=0.8")
+              .to(".hero-btn", { y: 0, opacity: 1, duration: 1, ease: "power3.out" }, "-=0.8");
+        });
+
+        // Scroll Animations
+        const animateFadeUp = (selector) => {
+            gsap.utils.toArray(selector).forEach(el => {
+                gsap.to(el, {
+                    scrollTrigger: {
+                        trigger: el,
+                        start: "top 85%",
+                        toggleActions: "play none none reverse"
+                    },
+                    y: 0,
+                    opacity: 1,
+                    duration: 0.8,
+                    ease: "power3.out"
+                });
+            });
+        };
+
+        animateFadeUp(".stat-box");
+        animateFadeUp(".service-card");
+        animateFadeUp(".section-title");
+        animateFadeUp(".section-desc");
+        animateFadeUp(".portfolio-item");
+
+        // Number Counter
+        gsap.utils.toArray(".counter").forEach(counter => {
+            gsap.to(counter, {
+                scrollTrigger: {
+                    trigger: counter,
+                    start: "top 85%",
+                    once: true
+                },
+                innerText: counter.getAttribute("data-target"),
+                duration: 2,
+                snap: { innerText: 1 },
+                ease: "power2.out",
+                onUpdate: function() {
+                    counter.innerHTML = Math.ceil(this.targets()[0].innerText);
+                }
+            });
+        });
+
+        // Video Modal Logic
+        const modal = document.getElementById('video-modal');
+        const iframe = document.getElementById('video-frame');
+
+        function openVideo(fileId) {
+            const embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            iframe.src = embedUrl;
+            modal.classList.remove('hidden');
+            modal.classList.add('active');
+            lenis.stop();
+        }
+
+        function closeVideo() {
+            modal.classList.remove('active');
+            modal.classList.add('hidden');
+            setTimeout(() => { iframe.src = ""; }, 500); // Clear source after fade out
+            lenis.start();
+        }
+
+        // Close on click outside
+        modal.addEventListener('click', (e) => {
+            if(e.target === modal) closeVideo();
+        });
+    </script>
+</body>
+</html>
